@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 from req import get_weather
 from datetime import datetime
 from names_request import get_names
@@ -21,15 +21,41 @@ def index():
     return result
 
 
+# @app.route('/names')
+# def req_names():
+#     global requested_year
+#     url = "https://apidata.mos.ru/v1/datasets/2009/rows?api_key=c0247fff6c7ea608f20f8edacd8cdc57"
+#     names = get_names(url)
+#
+#     result = '<table><tr><th> Имя</th><th> Год </th><tr>'
+#     for i in names:
+#         result += '<tr><td> %s </td>' % i['Cells']['Name']
+#         result += '<td> %s </td>' % i['Cells']['Year']
+#     result += '</tr></table>'
+#     return result
+
+# Получается только чтото одно, либо весь список, либо только с параметром...
 @app.route('/names')
-def req_names():
+def req_names_arg():
+    global requested_year
     url = "https://apidata.mos.ru/v1/datasets/2009/rows?api_key=c0247fff6c7ea608f20f8edacd8cdc57"
     names = get_names(url)
+    years = [2015,2016,2017,2018]
+
+    try:
+        requested_year = int(request.args.get('year'))
+    except (TypeError, ValueError):
+        return "Ой"
+
+    year = int(request.args.get('year')) if int(request.args.get('year')) in years else 0
 
     result = '<table><tr><th> Имя</th><th> Год </th><tr>'
     for i in names:
-        result += '<tr><td> %s </td>' % i['Cells']['Name']
-        result += '<td> %s </td>' % i['Cells']['Year']
+        if year == i['Cells']['Year']:
+            result += '<tr><td> %s </td>' % i['Cells']['Name']
+            result += '<td> %s </td>' % i['Cells']['Year']
+        elif year == 0:
+            result = "<p>Нет информации по запрошенному году</p>"
 
     result += '</tr></table>'
     return result
@@ -37,3 +63,5 @@ def req_names():
 
 if __name__ == "__main__":
     app.run(port=5151)
+
+
